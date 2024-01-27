@@ -41,7 +41,7 @@ public class EmployeeService implements HttpService {
     private static final Logger LOGGER = Logger.getLogger(EmployeeService.class.getName());
 
     EmployeeService(Config config) {
-        employees = EmployeeRepository.create(config);
+        employees = new EmployeeRepository();
     }
 
     /**

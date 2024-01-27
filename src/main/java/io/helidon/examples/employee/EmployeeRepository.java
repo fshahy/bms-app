@@ -13,97 +13,133 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.helidon.examples.employee;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
+import io.helidon.common.context.Contexts;
 import io.helidon.config.Config;
+import io.helidon.dbclient.DbClient;
+import io.helidon.dbclient.DbRow;
 
 /**
- * Interface for Data Access Objects.
+ * Implementation of the {@link EmployeeRepository}. This implementation uses an
+ * Oracle database to persist the Employee objects.
  */
-public interface EmployeeRepository {
+final class EmployeeRepository {
+
+    private final DbClient dbClient;
 
     /**
-     * Create a new employeeRepository instance using one of the two implementations
-     * {@link EmployeeRepositoryImpl} or {@link EmployeeRepositoryImplDB} depending
-     * on the specified driver type.
+     * Creates the database connection using the parameters specified in the
+     * <code>application.yaml</code> file located in the <code>resources</code> directory.
      *
-     * @param driverType Represents the driver type. It can be Array or Oracle.
-     * @param config     Contains the application configuration specified in the
-     *                   <code>application.yaml</code> file.
-     * @return The employee repository implementation.
+     * @param config Represents the application configuration.
      */
-    static EmployeeRepository create(Config config) {
-        return new EmployeeRepositoryImplDB(config);
+    EmployeeRepository() {
+        Config dbConfig = Config.global().get("db");
+        dbClient = Contexts.globalContext()
+                            .get(DbClient.class)
+                            .orElseGet(() -> DbClient.create(dbConfig));
     }
 
-    /**
-     * Returns the list of the employees.
-     *
-     * @return The collection of all the employee objects
-     */
-    List<Employee> getAll();
+    public List<Employee> getAll() {
+        String queryStr = "SELECT * FROM EMPLOYEE";
 
-    /**
-     * Returns the list of the employees that match with the specified lastName.
-     *
-     * @param lastName Represents the last name value for the search.
-     * @return The collection of the employee objects that match with the specified
-     * lastName
-     */
-    List<Employee> getByLastName(String lastName);
+        return toEmployeeList(dbClient.execute().query(queryStr));
+    }
 
-    /**
-     * Returns the list of the employees that match with the specified title.
-     *
-     * @param title Represents the title value for the search
-     * @return The collection of the employee objects that match with the specified
-     * title
-     */
-    List<Employee> getByTitle(String title);
+    public List<Employee> getByLastName(String name) {
+        String queryStr = "SELECT * FROM EMPLOYEE WHERE lastName LIKE ?";
 
-    /**
-     * Returns the list of the employees that match with the specified department.
-     *
-     * @param department Represents the department value for the search.
-     * @return The collection of the employee objects that match with the specified
-     * department
-     */
-    List<Employee> getByDepartment(String department);
+        return toEmployeeList(dbClient.execute().query(queryStr, name));
+    }
 
-    /**
-     * Add a new employee.
-     *
-     * @param employee returns the employee object including the ID generated.
-     * @return the employee object including the ID generated
-     */
-    Employee save(Employee employee); // Add new employee
+    public List<Employee> getByTitle(String title) {
+        String queryStr = "SELECT * FROM EMPLOYEE WHERE title LIKE ?";
 
-    /**
-     * Update an existing employee.
-     *
-     * @param updatedEmployee The employee object with the values to update
-     * @param id              The employee ID
-     * @return number of updated records
-     */
-    long update(Employee updatedEmployee, String id);
+        return toEmployeeList(dbClient.execute().query(queryStr, title));
+    }
 
-    /**
-     * Delete an employee by ID.
-     *
-     * @param id The employee ID
-     * @return number of deleted records
-     */
-    long deleteById(String id);
+    public List<Employee> getByDepartment(String department) {
+        String queryStr = "SELECT * FROM EMPLOYEE WHERE department LIKE ?";
 
-    /**
-     * Get an employee by ID.
-     *
-     * @param id The employee ID
-     * @return The employee object if the employee is found
-     */
-    Optional<Employee> getById(String id);
+        return toEmployeeList(dbClient.execute().query(queryStr, department));
+    }
+
+    public Employee save(Employee employee) {
+        String insertTableSQL = "INSERT INTO EMPLOYEE "
+                + "(id, firstName, lastName, email, phone, birthDate, title, department) "
+                + "VALUES(?,?,?,?,?,?,?,?)";
+
+        dbClient.execute()
+                .createInsert(insertTableSQL)
+                .addParam(employee.getId())
+                .addParam(employee.getFirstName())
+                .addParam(employee.getLastName())
+                .addParam(employee.getEmail())
+                .addParam(employee.getPhone())
+                .addParam(employee.getBirthDate())
+                .addParam(employee.getTitle())
+                .addParam(employee.getDepartment())
+                .execute();
+        // let's always return the employee once the insert finishes
+        return employee;
+    }
+
+    public long deleteById(String id) {
+        String deleteRowSQL = "DELETE FROM EMPLOYEE WHERE id=?";
+
+        return dbClient.execute().delete(deleteRowSQL, id);
+    }
+
+    public Optional<Employee> getById(String id) {
+        String queryStr = "SELECT * FROM EMPLOYEE WHERE id =?";
+
+        return dbClient.execute()
+                .get(queryStr, id)
+                .map(row -> row.as(Employee.class));
+    }
+
+    public long update(Employee updatedEmployee, String id) {
+        String updateTableSQL = "UPDATE EMPLOYEE SET firstName=?, lastName=?, email=?, phone=?, birthDate=?, title=?, "
+                + "department=?  WHERE id=?";
+
+        return dbClient.execute()
+                .createUpdate(updateTableSQL)
+                .addParam(updatedEmployee.getFirstName())
+                .addParam(updatedEmployee.getLastName())
+                .addParam(updatedEmployee.getEmail())
+                .addParam(updatedEmployee.getPhone())
+                .addParam(updatedEmployee.getBirthDate())
+                .addParam(updatedEmployee.getTitle())
+                .addParam(updatedEmployee.getDepartment())
+                .addParam(id)
+                .execute();
+    }
+
+    private static List<Employee> toEmployeeList(Stream<DbRow> rows) {
+        return rows.map(EmployeeDbMapper::read).toList();
+    }
+
+    private static final class EmployeeDbMapper {
+        private EmployeeDbMapper() {
+        }
+
+        static Employee read(DbRow row) {
+            // map named columns to an object
+            return Employee.of(
+                    row.column("id").get(String.class),
+                    row.column("firstName").get(String.class),
+                    row.column("lastName").get(String.class),
+                    row.column("email").get(String.class),
+                    row.column("phone").get(String.class),
+                    row.column("birthDate").get(String.class),
+                    row.column("title").get(String.class),
+                    row.column("department").get(String.class)
+            );
+        }
+    }
 }
