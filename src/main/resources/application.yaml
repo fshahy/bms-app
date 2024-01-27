@@ -13,16 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 app:
-  # database user, such as "system"
-  user: <user-db>
-  # database password
-  password: <password-user-db>
-  # host url - remove to use the default of Oracle XE (localhost:1521/XE)
-  hosturl: <hostname>:<port>/<database_unique_name>.<host_domain_name>
-  # switch to "Database" to use database. Uses in-memory structure otherwise
-  drivertype: Array
+  name: "Employee App"
+  version: "1.0.0"
+  banner: ${app.name} / ${app.version}
+
+db:
+  source: jdbc
+  connection:
+    url: jdbc:mysql://127.0.0.1:6603/app?useSSL=false
+    username: root
+    password: root
+    initializationFailTimeout: -1
+    connectionTimeout: 2000
 
 server:
   port: 8080
