@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.helidon.examples.employee;
+package com.bms.employees;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import io.helidon.config.Config;
 import io.helidon.webserver.http.HttpRules;
 import io.helidon.webserver.http.HttpService;
 import io.helidon.webserver.http.ServerRequest;
@@ -40,7 +39,7 @@ public class EmployeeService implements HttpService {
     private final EmployeeRepository employees;
     private static final Logger LOGGER = Logger.getLogger(EmployeeService.class.getName());
 
-    EmployeeService(Config config) {
+    public EmployeeService() {
         employees = new EmployeeRepository();
     }
 

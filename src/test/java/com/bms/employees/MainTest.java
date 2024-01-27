@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.helidon.examples.employee;
+package com.bms.employees;
 
 import io.helidon.config.Config;
 import io.helidon.http.Status;
@@ -26,6 +26,8 @@ import io.helidon.webserver.testing.junit5.SetUpRoute;
 
 import jakarta.json.JsonArray;
 import org.junit.jupiter.api.Test;
+
+import com.bms.Main;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;

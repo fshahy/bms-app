@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package io.helidon.examples.employee;
+package com.bms;
 
+import com.bms.employees.EmployeeService;
 import com.bms.users.UserService;
 
 import io.helidon.common.context.Contexts;
@@ -83,10 +84,10 @@ public final class Main {
      * @param routing routing builder
      * @param config  configuration of this server
      */
-    static void routing(HttpRouting.Builder routing, Config config) {
+    public static void routing(HttpRouting.Builder routing, Config config) {
         routing.register("/public", StaticContentService.builder("public")
-                                                        .welcomeFileName("index.html"))
-               .register("/employees", new EmployeeService(config))
+                                                        .welcomeFileName("dashboard.html"))
+               .register("/employees", new EmployeeService())
                .register("/users", new UserService());
     }
 

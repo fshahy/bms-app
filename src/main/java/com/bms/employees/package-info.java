@@ -15,10 +15,10 @@
  */
 
 /**
- * Employee example application
+ * Employees service
  * <p>
- * Start with {@link io.helidon.examples.employee.Main} class.
+ * Start with {@link com.bms.Main} class.
  *
- * @see io.helidon.examples.employee.Main
+ * @see com.bms.Main
  */
-package io.helidon.examples.employee;
+package com.bms.employees;
