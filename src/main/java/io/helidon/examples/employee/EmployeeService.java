@@ -41,8 +41,7 @@ public class EmployeeService implements HttpService {
     private static final Logger LOGGER = Logger.getLogger(EmployeeService.class.getName());
 
     EmployeeService(Config config) {
-        String driverType = config.get("app.drivertype").asString().orElse("Array");
-        employees = EmployeeRepository.create(driverType, config);
+        employees = EmployeeRepository.create(config);
     }
 
     /**

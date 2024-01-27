@@ -19,10 +19,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import io.helidon.common.context.Contexts;
 import io.helidon.config.Config;
 import io.helidon.dbclient.DbClient;
 import io.helidon.dbclient.DbRow;
-import io.helidon.dbclient.jdbc.JdbcClientBuilder;
 
 /**
  * Implementation of the {@link EmployeeRepository}. This implementation uses an
@@ -39,26 +39,8 @@ final class EmployeeRepositoryImplDB implements EmployeeRepository {
      * @param config Represents the application configuration.
      */
     EmployeeRepositoryImplDB(Config config) {
-        String url = "jdbc:oracle:thin:@";
-        String driver = "oracle.jdbc.driver.OracleDriver";
-
-        String dbUserName = config.get("app.user").asString().orElse("sys as SYSDBA");
-        String dbUserPassword = config.get("app.password").asString().orElse("password");
-        String dbHostURL = config.get("app.hosturl").asString().orElse("localhost:1521/xe");
-
-        try {
-            Class.forName(driver);
-        } catch (Exception sqle) {
-            sqle.printStackTrace();
-        }
-
-        // now we create the DB Client - explicitly use JDBC, so we can
-        // configure JDBC specific configuration
-        dbClient = JdbcClientBuilder.create()
-                .url(url + dbHostURL)
-                .username(dbUserName)
-                .password(dbUserPassword)
-                .build();
+        dbClient = DbClient.create(config.get("db"));
+        Contexts.globalContext().register(dbClient);
     }
 
     @Override
@@ -70,21 +52,21 @@ final class EmployeeRepositoryImplDB implements EmployeeRepository {
 
     @Override
     public List<Employee> getByLastName(String name) {
-        String queryStr = "SELECT * FROM EMPLOYEE WHERE LASTNAME LIKE ?";
+        String queryStr = "SELECT * FROM EMPLOYEE WHERE lastName LIKE ?";
 
         return toEmployeeList(dbClient.execute().query(queryStr, name));
     }
 
     @Override
     public List<Employee> getByTitle(String title) {
-        String queryStr = "SELECT * FROM EMPLOYEE WHERE TITLE LIKE ?";
+        String queryStr = "SELECT * FROM EMPLOYEE WHERE title LIKE ?";
 
         return toEmployeeList(dbClient.execute().query(queryStr, title));
     }
 
     @Override
     public List<Employee> getByDepartment(String department) {
-        String queryStr = "SELECT * FROM EMPLOYEE WHERE DEPARTMENT LIKE ?";
+        String queryStr = "SELECT * FROM EMPLOYEE WHERE department LIKE ?";
 
         return toEmployeeList(dbClient.execute().query(queryStr, department));
     }
@@ -92,11 +74,12 @@ final class EmployeeRepositoryImplDB implements EmployeeRepository {
     @Override
     public Employee save(Employee employee) {
         String insertTableSQL = "INSERT INTO EMPLOYEE "
-                + "(ID, FIRSTNAME, LASTNAME, EMAIL, PHONE, BIRTHDATE, TITLE, DEPARTMENT) "
-                + "VALUES(EMPLOYEE_SEQ.NEXTVAL,?,?,?,?,?,?,?)";
+                + "(id, firstName, lastName, email, phone, birthDate, title, department) "
+                + "VALUES(?,?,?,?,?,?,?,?)";
 
         dbClient.execute()
                 .createInsert(insertTableSQL)
+                .addParam(employee.getId())
                 .addParam(employee.getFirstName())
                 .addParam(employee.getLastName())
                 .addParam(employee.getEmail())
@@ -111,14 +94,14 @@ final class EmployeeRepositoryImplDB implements EmployeeRepository {
 
     @Override
     public long deleteById(String id) {
-        String deleteRowSQL = "DELETE FROM EMPLOYEE WHERE ID=?";
+        String deleteRowSQL = "DELETE FROM EMPLOYEE WHERE id=?";
 
         return dbClient.execute().delete(deleteRowSQL, id);
     }
 
     @Override
     public Optional<Employee> getById(String id) {
-        String queryStr = "SELECT * FROM EMPLOYEE WHERE ID =?";
+        String queryStr = "SELECT * FROM EMPLOYEE WHERE id =?";
 
         return dbClient.execute()
                 .get(queryStr, id)
@@ -127,8 +110,8 @@ final class EmployeeRepositoryImplDB implements EmployeeRepository {
 
     @Override
     public long update(Employee updatedEmployee, String id) {
-        String updateTableSQL = "UPDATE EMPLOYEE SET FIRSTNAME=?, LASTNAME=?, EMAIL=?, PHONE=?, BIRTHDATE=?, TITLE=?, "
-                + "DEPARTMENT=?  WHERE ID=?";
+        String updateTableSQL = "UPDATE EMPLOYEE SET firstName=?, lastName=?, email=?, phone=?, birthDate=?, title=?, "
+                + "department=?  WHERE id=?";
 
         return dbClient.execute()
                 .createUpdate(updateTableSQL)
@@ -139,7 +122,7 @@ final class EmployeeRepositoryImplDB implements EmployeeRepository {
                 .addParam(updatedEmployee.getBirthDate())
                 .addParam(updatedEmployee.getTitle())
                 .addParam(updatedEmployee.getDepartment())
-                .addParam(Integer.parseInt(id))
+                .addParam(id)
                 .execute();
     }
 
@@ -154,14 +137,14 @@ final class EmployeeRepositoryImplDB implements EmployeeRepository {
         static Employee read(DbRow row) {
             // map named columns to an object
             return Employee.of(
-                    row.column("ID").get(String.class),
-                    row.column("FIRSTNAME").get(String.class),
-                    row.column("LASTNAME").get(String.class),
-                    row.column("EMAIL").get(String.class),
-                    row.column("PHONE").get(String.class),
-                    row.column("BIRTHDATE").get(String.class),
-                    row.column("TITLE").get(String.class),
-                    row.column("DEPARTMENT").get(String.class)
+                    row.column("id").get(String.class),
+                    row.column("firstName").get(String.class),
+                    row.column("lastName").get(String.class),
+                    row.column("email").get(String.class),
+                    row.column("phone").get(String.class),
+                    row.column("birthDate").get(String.class),
+                    row.column("title").get(String.class),
+                    row.column("department").get(String.class)
             );
         }
     }

@@ -41,7 +41,7 @@ public class MainTest {
 
     @SetUpRoute
     public static void setup(HttpRouting.Builder routing) {
-        Main.routing(routing, Config.empty());
+        Main.routing(routing, Config.create());
     }
 
     @Test

@@ -145,6 +145,7 @@ function save() {
     $.ajax({
         url: server + "employees",
         method: "POST",
+        contentType: "application/json",
         data: JSON.stringify(employee)
     }).done(function(data) {
         $("#detail").hide();
@@ -175,6 +176,7 @@ function updateEmployee() {
     $.ajax({
         url: server + "employees/" + employee.id,
         method: "PUT",
+        contentType: "application/json",
         data: JSON.stringify(employee)
     }).done(function(data) {
         $("#detail").hide();
