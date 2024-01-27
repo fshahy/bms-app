@@ -36,13 +36,8 @@ public interface EmployeeRepository {
      *                   <code>application.yaml</code> file.
      * @return The employee repository implementation.
      */
-    static EmployeeRepository create(String driverType, Config config) {
-        return switch (driverType) {
-            case "Database" -> new EmployeeRepositoryImplDB(config);
-            default ->
-                // Array is default
-                    new EmployeeRepositoryImpl();
-        };
+    static EmployeeRepository create(Config config) {
+        return new EmployeeRepositoryImplDB(config);
     }
 
     /**
