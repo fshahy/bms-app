@@ -1,0 +1,10 @@
+CREATE TABLE `EMPLOYEE` (
+  `id` varchar(50) NOT NULL,
+  `firstName` varchar(45) DEFAULT NULL,
+  `lastName` varchar(45) DEFAULT NULL,
+  `email` varchar(45) DEFAULT NULL,
+  `phone` varchar(45) DEFAULT NULL,
+  `birthDate` date DEFAULT NULL,
+  `title` varchar(45) DEFAULT NULL,
+  `department` varchar(45) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
