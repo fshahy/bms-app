@@ -26,6 +26,10 @@ db:
     password: root
     initializationFailTimeout: -1
     connectionTimeout: 2000
+  statements:
+    create-user: "INSERT INTO USERS(id, firstName, lastName, email, password) VALUES(:id, :firstName, :lastName, :email, :password)"
+    select-all-users: "SELECT * FROM USERS"
+    delete-user: "DELETE FROM USERS WHERE id=:id"
 
 server:
   port: 8080

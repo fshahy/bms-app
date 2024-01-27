@@ -16,7 +16,11 @@
 
 package io.helidon.examples.employee;
 
+import com.bms.users.UserService;
+
+import io.helidon.common.context.Contexts;
 import io.helidon.config.Config;
+import io.helidon.dbclient.DbClient;
 import io.helidon.logging.common.LogConfig;
 import io.helidon.webserver.WebServer;
 import io.helidon.webserver.WebServerConfig;
@@ -61,10 +65,16 @@ public final class Main {
 
         // By default, this will pick up application.yaml from the classpath
         Config config = Config.create();
+        setupDb(config);
 
         // Get webserver config from the "server" section of application.yaml and JSON support registration
         server.config(config.get("server"))
               .routing(r -> routing(r, config));
+    }
+
+    static void setupDb(Config config) {
+        DbClient dbClient = DbClient.create(config.get("db"));
+        Contexts.globalContext().register(dbClient);
     }
 
     /**
@@ -76,7 +86,8 @@ public final class Main {
     static void routing(HttpRouting.Builder routing, Config config) {
         routing.register("/public", StaticContentService.builder("public")
                                                         .welcomeFileName("index.html"))
-               .register("/employees", new EmployeeService(config));
+               .register("/employees", new EmployeeService(config))
+               .register("/users", new UserService());
     }
 
 }
